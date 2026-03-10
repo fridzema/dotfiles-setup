@@ -1,27 +1,19 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+
 echo "==> Configuring Git & SSH..."
 
-# --- Git config ---
-read -rp "Enter your full name for git: " GIT_NAME
-read -rp "Enter your email for git: " GIT_EMAIL
-
-git config --global user.name "$GIT_NAME"
-git config --global user.email "$GIT_EMAIL"
-git config --global init.defaultBranch main
-git config --global pull.rebase true
-
-echo "    Git configured for: $GIT_NAME <$GIT_EMAIL>"
-
-# --- SSH key ---
+# --- SSH key (generate first, needed for git signing) ---
 SSH_KEY="${HOME}/.ssh/id_ed25519"
 
 if [ -f "$SSH_KEY" ]; then
     echo "    SSH key already exists at $SSH_KEY"
 else
+    read -rp "Enter your email for SSH key: " SSH_EMAIL
     echo "    Generating Ed25519 SSH key..."
-    ssh-keygen -t ed25519 -C "$GIT_EMAIL" -f "$SSH_KEY"
+    ssh-keygen -t ed25519 -C "$SSH_EMAIL" -f "$SSH_KEY"
 fi
 
 # Start ssh-agent and add key
@@ -45,6 +37,20 @@ ssh-add --apple-use-keychain "$SSH_KEY" 2>/dev/null || ssh-add "$SSH_KEY"
 # Copy public key to clipboard
 pbcopy < "${SSH_KEY}.pub"
 echo "    Public key copied to clipboard."
+
+# --- Git config ---
+echo "    Installing gitconfig..."
+cp "${SCRIPT_DIR}/../config/.gitconfig" "${HOME}/.gitconfig"
+
+read -rp "Enter your full name for git: " GIT_NAME
+read -rp "Enter your email for git: " GIT_EMAIL
+
+git config --global user.name "$GIT_NAME"
+git config --global user.email "$GIT_EMAIL"
+git config --global user.signingkey "${SSH_KEY}.pub"
+
+echo "    Git configured for: $GIT_NAME <$GIT_EMAIL>"
+echo "    Commits will be signed with: ${SSH_KEY}.pub"
 
 echo "    Opening GitHub SSH settings..."
 open "https://github.com/settings/ssh/new"
