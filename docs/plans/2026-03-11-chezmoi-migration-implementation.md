@@ -53,6 +53,7 @@ Set up the core chezmoi configuration files that define how the repo is processe
 **Files:**
 - Create: `.chezmoi.toml.tmpl`
 - Create: `.chezmoiignore`
+- Create: `.github/test-chezmoi-data.toml`
 
 **Step 1: Create `.chezmoi.toml.tmpl`**
 
@@ -86,19 +87,33 @@ LICENSE
 .gitignore
 ```
 
-**Step 3: Verify templates compile**
+**Step 3: Create `.github/test-chezmoi-data.toml`**
 
-```bash
-chezmoi execute-template < .chezmoi.toml.tmpl
+Fixture data for deterministic, non-interactive template verification. Used here and in CI.
+
+```toml
+[data]
+  name = "Test User"
+  email = "test@example.com"
+  hostname = "Test-Mac"
+  locale = "en_US"
 ```
 
-Expected: prompts for each value (or fails gracefully in non-interactive — that's fine for verification).
-
-**Step 4: Commit**
+**Step 4: Verify templates compile with fixture data**
 
 ```bash
-git add .chezmoi.toml.tmpl .chezmoiignore
-git commit -m "Add chezmoi foundation: config template and ignore file"
+chezmoi init --source="$(pwd)" \
+  --config-path=".github/test-chezmoi-data.toml" \
+  --dry-run --verbose
+```
+
+Expected: chezmoi renders the source state without errors using the test fixture data.
+
+**Step 5: Commit**
+
+```bash
+git add .chezmoi.toml.tmpl .chezmoiignore .github/test-chezmoi-data.toml
+git commit -m "Add chezmoi foundation: config template, ignore file, and test fixture data"
 ```
 
 ---
@@ -203,10 +218,10 @@ export PATH="$HOME/.composer/vendor/bin:$PATH"
 export BUN_INSTALL="$HOME/.bun"
 export PATH="$BUN_INSTALL/bin:$PATH"
 
-# NVM
+# NVM (uses $HOMEBREW_PREFIX set by brew shellenv — works on both Apple Silicon and Intel)
 export NVM_DIR="$HOME/.nvm"
-[ -s "/opt/homebrew/opt/nvm/nvm.sh" ] && \. "/opt/homebrew/opt/nvm/nvm.sh"
-[ -s "/opt/homebrew/opt/nvm/etc/bash_completion.d/nvm" ] && \. "/opt/homebrew/opt/nvm/etc/bash_completion.d/nvm"
+[ -s "$HOMEBREW_PREFIX/opt/nvm/nvm.sh" ] && \. "$HOMEBREW_PREFIX/opt/nvm/nvm.sh"
+[ -s "$HOMEBREW_PREFIX/opt/nvm/etc/bash_completion.d/nvm" ] && \. "$HOMEBREW_PREFIX/opt/nvm/etc/bash_completion.d/nvm"
 
 # Yarn global binaries
 export PATH="$HOME/.yarn/bin:$PATH"
@@ -352,8 +367,6 @@ set_global_default() {
 
 require_sudo() {
   sudo -v
-  # Keep sudo alive in the background
-  while true; do sudo -n true; sleep 60; kill -0 "$$" || exit; done 2>/dev/null &
 }
 
 restart_app() {
@@ -484,8 +497,17 @@ SOURCE_DIR="{{ .chezmoi.sourceDir }}"
 echo "==> Updating Homebrew..."
 brew update
 
+# Explicit install order: core tools first, then dev, apps, office, quicklook
+BREWFILES=(
+  "$SOURCE_DIR/brewfiles/Brewfile.core"
+  "$SOURCE_DIR/brewfiles/Brewfile.dev"
+  "$SOURCE_DIR/brewfiles/Brewfile.apps"
+  "$SOURCE_DIR/brewfiles/Brewfile.office"
+  "$SOURCE_DIR/brewfiles/Brewfile.quicklook"
+)
+
 echo "==> Installing packages from Brewfiles..."
-for brewfile in "$SOURCE_DIR"/brewfiles/Brewfile.*; do
+for brewfile in "${BREWFILES[@]}"; do
   echo "    Installing from $(basename "$brewfile")..."
   brew bundle --file="$brewfile" --no-lock
 done
@@ -922,7 +944,10 @@ check_app() {
   fi
 }
 
-check_app "FortiClient VPN" "/Applications/FortiClient.app"
+# --- Manual-install app inventory ---
+# Update this list when apps are added, removed, or renamed.
+
+# Setapp apps
 check_app "Bartender" "/Applications/Bartender 4.app"
 check_app "Paste" "/Applications/Paste.app"
 check_app "CleanShot X" "/Applications/CleanShot X.app"
@@ -930,6 +955,9 @@ check_app "HazeOver" "/Applications/HazeOver.app"
 check_app "DevUtils" "/Applications/DevUtils.app"
 check_app "Requestly" "/Applications/Requestly.app"
 check_app "AlDente Pro" "/Applications/AlDente Pro.app"
+
+# External downloads
+check_app "FortiClient VPN" "/Applications/FortiClient.app"
 
 if [ ${#MISSING[@]} -gt 0 ]; then
   echo "  Apps not yet installed:"
@@ -1048,8 +1076,7 @@ echo "==> Running chezmoi init --apply..."
 echo "    You will be prompted for configuration values on first run."
 echo ""
 
-# Replace 'yourusername' with your actual GitHub username
-chezmoi init --apply yourusername
+chezmoi init --apply fridzema
 ```
 
 **Step 2: Make executable**
@@ -1081,19 +1108,10 @@ Replace the old CI with chezmoi-aware validation.
 
 **Files:**
 - Modify: `.github/workflows/ci.yml`
-- Create: `.github/test-chezmoi-data.toml`
 
-**Step 1: Create `.github/test-chezmoi-data.toml`**
+Note: `.github/test-chezmoi-data.toml` was already created in Task 2.
 
-```toml
-[data]
-  name = "Test User"
-  email = "test@example.com"
-  hostname = "Test-Mac"
-  locale = "en_US"
-```
-
-**Step 2: Rewrite `.github/workflows/ci.yml`**
+**Step 1: Rewrite `.github/workflows/ci.yml`**
 
 ```yaml
 name: ci
@@ -1140,11 +1158,11 @@ jobs:
         run: |
           for f in brewfiles/Brewfile.*; do
             echo "Checking $f..."
-            brew bundle check --file="$f" --verbose || true
+            brew bundle check --file="$f" --verbose
           done
 ```
 
-**Step 3: Commit**
+**Step 2: Commit**
 
 ```bash
 git add .github/
@@ -1172,13 +1190,13 @@ Personal dotfiles managed with [chezmoi](https://www.chezmoi.io/), targeting mac
 On a fresh machine:
 
 ```bash
-bash -c "$(curl -fsSL https://raw.githubusercontent.com/yourusername/dotfiles/main/bin/setup.sh)"
+bash -c "$(curl -fsSL https://raw.githubusercontent.com/fridzema/dotfiles/main/bin/setup.sh)"
 ```
 
 Or clone and run manually:
 
 ```bash
-git clone https://github.com/yourusername/dotfiles.git
+git clone https://github.com/fridzema/dotfiles.git
 cd dotfiles
 ./bin/setup.sh
 ```
@@ -1267,9 +1285,14 @@ Update to reflect the new project structure.
 
 ```
 .DS_Store
+*.swp
+*.swo
+*~
+.idea/
+.vscode/
 ```
 
-The old `.setup-completed-steps` entry is no longer needed (chezmoi handles idempotency).
+The old `.setup-completed-steps` entry is no longer needed (chezmoi handles idempotency). Editor debris entries match `dot_gitignore_global` to protect the dotfiles repo itself.
 
 **Step 2: Commit**
 
@@ -1299,10 +1322,12 @@ Expected: all PASS.
 **Step 2: Verify chezmoi can process the source state**
 
 ```bash
-chezmoi init --source="$(pwd)" --dry-run --verbose
+chezmoi init --source="$(pwd)" \
+  --config-path=".github/test-chezmoi-data.toml" \
+  --dry-run --verbose
 ```
 
-Expected: chezmoi lists all target files without errors.
+Expected: chezmoi lists all target files without errors (using fixture data for deterministic validation).
 
 **Step 3: Validate all Brewfiles**
 
