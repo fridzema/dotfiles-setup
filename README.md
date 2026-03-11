@@ -7,14 +7,14 @@ Personal dotfiles managed with [chezmoi](https://www.chezmoi.io/), targeting mac
 On a fresh machine:
 
 ```bash
-bash -c "$(curl -fsSL https://raw.githubusercontent.com/fridzema/dotfiles/main/bin/setup.sh)"
+bash -c "$(curl -fsSL https://raw.githubusercontent.com/fridzema/dotfiles-setup/main/bin/setup.sh)"
 ```
 
 Or clone and run manually:
 
 ```bash
-git clone https://github.com/fridzema/dotfiles.git
-cd dotfiles
+git clone https://github.com/fridzema/dotfiles-setup.git
+cd dotfiles-setup
 ./bin/setup.sh
 ```
 

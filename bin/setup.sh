@@ -67,4 +67,10 @@ echo "==> Running chezmoi init --apply..."
 echo "    You will be prompted for configuration values on first run."
 echo ""
 
-chezmoi init --apply fridzema
+# Detect if running from a local clone (vs. curl pipe)
+SCRIPT_DIR="$(cd "$(dirname "$0")/.." && pwd)"
+if [ -f "$SCRIPT_DIR/.chezmoi.toml.tmpl" ]; then
+  chezmoi init --apply --source="$SCRIPT_DIR"
+else
+  chezmoi init --apply fridzema/dotfiles-setup
+fi
