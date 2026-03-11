@@ -13,7 +13,10 @@ set_global_default() {
 }
 
 require_sudo() {
-  sudo -v
+  if ! sudo -v; then
+    echo "ERROR: sudo authentication required. Aborting." >&2
+    exit 1
+  fi
 }
 
 restart_app() {
