@@ -10,8 +10,17 @@ echo "==> Applying Safari defaults..."
 
 close_system_settings
 
-# Use full plist path to bypass macOS sandbox restrictions (Ventura+)
+# macOS Ventura+ sandboxes Safari preferences — defaults write is blocked
+# unless the terminal has Full Disk Access. Try writing and skip gracefully
+# if the sandbox blocks it.
 SAFARI_PLIST="$HOME/Library/Containers/com.apple.Safari/Data/Library/Preferences/com.apple.Safari.plist"
+
+if ! defaults write "$SAFARI_PLIST" HomePage -string "about:blank" 2>/dev/null; then
+  echo "==> SKIPPED: Safari defaults require Full Disk Access for your terminal."
+  echo "    Grant it in System Settings > Privacy & Security > Full Disk Access,"
+  echo "    then re-run to apply Safari preferences."
+  exit 0
+fi
 
 # Don't send search queries to Apple
 set_default "$SAFARI_PLIST" UniversalSearchEnabled bool false
@@ -19,9 +28,6 @@ set_default "$SAFARI_PLIST" SuppressSearchSuggestions bool true
 
 # Show full URL
 set_default "$SAFARI_PLIST" ShowFullURLInSmartSearchField bool true
-
-# Home page: about:blank
-set_default "$SAFARI_PLIST" HomePage string "about:blank"
 
 # Enable Develop menu and Web Inspector
 set_default "$SAFARI_PLIST" IncludeDevelopMenu bool true
