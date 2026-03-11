@@ -47,7 +47,7 @@ chezmoi update
 |---|---|
 | `.chezmoi.toml.tmpl` | Machine-specific config (name, email, hostname, locale) |
 | `dot_gitconfig.tmpl` | Git configuration template |
-| `dot_zshrc.tmpl` | Shell configuration template |
+| `dot_zshrc` | Shell configuration |
 | `private_dot_ssh/` | SSH config (deployed with 0700 permissions) |
 | `brewfiles/` | Split Brewfiles by category (core, dev, apps, office, quicklook) |
 | `.chezmoiscripts/` | Lifecycle scripts (SSH key gen, package install, macOS defaults) |
