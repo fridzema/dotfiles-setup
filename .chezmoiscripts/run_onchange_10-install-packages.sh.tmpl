@@ -25,7 +25,7 @@ BREWFILES=(
 echo "==> Installing packages from Brewfiles..."
 for brewfile in "${BREWFILES[@]}"; do
   echo "    Installing from $(basename "$brewfile")..."
-  brew bundle --file="$brewfile" --no-lock
+  brew bundle --file="$brewfile"
 done
 
 echo "==> Package installation complete."
