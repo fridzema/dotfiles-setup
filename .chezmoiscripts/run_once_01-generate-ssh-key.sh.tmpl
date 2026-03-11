@@ -1,0 +1,24 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+SSH_KEY="{{ .chezmoi.homeDir }}/.ssh/id_ed25519"
+
+if [ -f "$SSH_KEY" ]; then
+  echo "SSH key already exists at $SSH_KEY, skipping generation."
+  exit 0
+fi
+
+echo "==> Generating SSH key..."
+ssh-keygen -t ed25519 -C "{{ .data.email }}" -f "$SSH_KEY"
+
+echo "==> Adding SSH key to macOS Keychain..."
+eval "$(ssh-agent -s)"
+ssh-add --apple-use-keychain "$SSH_KEY" 2>/dev/null || ssh-add "$SSH_KEY"
+
+echo "==> Copying public key to clipboard..."
+pbcopy < "${SSH_KEY}.pub"
+
+echo ""
+echo "SSH key generated and added to Keychain."
+echo "Public key has been copied to your clipboard."
+echo "Add it to GitHub: https://github.com/settings/ssh/new"
