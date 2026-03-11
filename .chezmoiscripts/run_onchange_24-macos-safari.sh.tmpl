@@ -1,0 +1,34 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+# shellcheck source=helpers/macos-defaults.sh
+source "{{ .chezmoi.sourceDir }}/helpers/macos-defaults.sh"
+
+echo "==> Applying Safari defaults..."
+
+close_system_settings
+
+# Don't send search queries to Apple
+set_default com.apple.Safari UniversalSearchEnabled bool false
+set_default com.apple.Safari SuppressSearchSuggestions bool true
+
+# Show full URL
+set_default com.apple.Safari ShowFullURLInSmartSearchField bool true
+
+# Home page: about:blank
+set_default com.apple.Safari HomePage string "about:blank"
+
+# Enable Develop menu and Web Inspector
+set_default com.apple.Safari IncludeDevelopMenu bool true
+set_default com.apple.Safari WebKitDeveloperExtrasEnabledPreferenceKey bool true
+set_default com.apple.Safari com.apple.Safari.ContentPageGroupIdentifier.WebKit2DeveloperExtrasEnabled bool true
+
+# Warn about fraudulent websites
+set_default com.apple.Safari WarnAboutFraudulentWebsites bool true
+
+# Auto-update extensions
+set_default com.apple.Safari InstallExtensionUpdatesAutomatically bool true
+
+restart_app "Safari"
+
+echo "==> Safari defaults applied."

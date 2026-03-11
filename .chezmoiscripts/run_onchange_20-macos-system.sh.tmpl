@@ -1,0 +1,74 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+# shellcheck source=helpers/macos-defaults.sh
+source "{{ .chezmoi.sourceDir }}/helpers/macos-defaults.sh"
+
+echo "==> Applying macOS system defaults..."
+
+close_system_settings
+require_sudo
+
+# Set computer name
+sudo scutil --set ComputerName "{{ .data.hostname }}"
+sudo scutil --set HostName "{{ .data.hostname }}"
+sudo scutil --set LocalHostName "{{ .data.hostname }}"
+sudo defaults write /Library/Preferences/SystemConfiguration/com.apple.smb.server NetBIOSName -string "{{ .data.hostname }}"
+
+# Disable the sound effects on boot
+sudo nvram StartupMute=%01
+
+# Reveal IP, hostname, OS version when clicking clock in login window
+sudo defaults write /Library/Preferences/com.apple.loginwindow AdminHostInfo HostName
+
+# Enable dark mode
+set_global_default AppleInterfaceStyle string "Dark"
+
+# Graphite accent color
+set_global_default AppleAccentColor string "-1"
+set_global_default AppleHighlightColor string "0.847059 0.847059 0.862745 Graphite"
+
+# Sidebar icon size: medium
+set_global_default NSTableViewDefaultSizeMode int 2
+
+# Fast window resize
+set_global_default NSWindowResizeTime float 0.001
+
+# Expand save panel by default
+set_global_default NSNavPanelExpandedStateForSaveMode bool true
+set_global_default NSNavPanelExpandedStateForSaveMode2 bool true
+
+# Expand print panel by default
+set_global_default PMPrintingExpandedStateForPrint bool true
+set_global_default PMPrintingExpandedStateForPrint2 bool true
+
+# Save to disk (not iCloud) by default
+set_global_default NSDocumentSaveNewDocumentsToCloud bool false
+
+# Quit printer app when done
+set_default com.apple.print.PrintingPrefs "Quit When Finished" bool true
+
+# Disable "Are you sure you want to open this application?" dialog
+set_default com.apple.LaunchServices LSQuarantine bool false
+
+# Metric units and Celsius
+set_global_default AppleMeasurementUnits string "Centimeters"
+set_global_default AppleMetricUnits bool true
+set_global_default AppleTemperatureUnit string "Celsius"
+
+# Menu bar clock
+set_default com.apple.menuextra.clock IsAnalog bool false
+set_default com.apple.menuextra.clock DateFormat string "EEE MMM d h:mm a"
+
+# Language and locale
+defaults write NSGlobalDomain AppleLanguages -array "en" "nl"
+defaults write NSGlobalDomain AppleLocale -string "{{ .data.locale }}"
+
+# Screen: require password immediately after sleep
+set_default com.apple.screensaver askForPassword int 1
+set_default com.apple.screensaver askForPasswordDelay int 0
+
+restart_app "SystemUIServer"
+restart_app "cfprefsd"
+
+echo "==> System defaults applied."

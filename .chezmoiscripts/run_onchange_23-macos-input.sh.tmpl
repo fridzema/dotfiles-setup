@@ -1,0 +1,42 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+# shellcheck source=helpers/macos-defaults.sh
+source "{{ .chezmoi.sourceDir }}/helpers/macos-defaults.sh"
+
+echo "==> Applying input defaults..."
+
+close_system_settings
+
+# Blazingly fast keyboard repeat
+set_global_default KeyRepeat int 1
+set_global_default InitialKeyRepeat int 10
+
+# Key repeat over press-and-hold
+set_global_default ApplePressAndHoldEnabled bool false
+
+# Disable natural scrolling
+set_global_default com.apple.swipescrolldirection bool false
+
+# Disable auto-capitalization
+set_global_default NSAutomaticCapitalizationEnabled bool false
+
+# Disable smart dashes
+set_global_default NSAutomaticDashSubstitutionEnabled bool false
+
+# Disable auto period substitution
+set_global_default NSAutomaticPeriodSubstitutionEnabled bool false
+
+# Disable smart quotes
+set_global_default NSAutomaticQuoteSubstitutionEnabled bool false
+
+# Disable auto-correct
+set_global_default NSAutomaticSpellingCorrectionEnabled bool false
+
+# Full keyboard access in all controls
+set_global_default AppleKeyboardUIMode int 3
+
+# Better Bluetooth audio quality
+set_default com.apple.BluetoothAudioAgent "Apple Bitpool Min (editable)" int 40
+
+echo "==> Input defaults applied."

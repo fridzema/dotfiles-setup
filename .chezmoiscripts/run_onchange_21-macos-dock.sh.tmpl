@@ -1,0 +1,41 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+# shellcheck source=helpers/macos-defaults.sh
+source "{{ .chezmoi.sourceDir }}/helpers/macos-defaults.sh"
+
+echo "==> Applying Dock defaults..."
+
+close_system_settings
+
+# Icon size: 36px
+set_default com.apple.dock tilesize int 36
+
+# Minimize into app icon
+set_default com.apple.dock minimize-to-application bool true
+
+# Wipe all default app icons
+defaults write com.apple.dock persistent-apps -array
+
+# Don't show recent apps
+set_default com.apple.dock show-recents bool false
+
+# Disable Dashboard
+set_default com.apple.dashboard mcx-disabled bool true
+set_default com.apple.dock dashboard-in-overlay bool true
+
+# Don't auto-rearrange Spaces
+set_default com.apple.dock mru-spaces bool false
+
+# Fast Mission Control animation
+set_default com.apple.dock expose-animation-duration float 0.1
+
+# No launch animation
+set_default com.apple.dock launchanim bool false
+
+# Highlight hover for stack grid view
+set_default com.apple.dock mouse-over-hilite-stack bool true
+
+restart_app "Dock"
+
+echo "==> Dock defaults applied."

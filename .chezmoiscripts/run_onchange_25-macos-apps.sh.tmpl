@@ -1,0 +1,46 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+# shellcheck source=helpers/macos-defaults.sh
+source "{{ .chezmoi.sourceDir }}/helpers/macos-defaults.sh"
+
+echo "==> Applying app defaults..."
+
+close_system_settings
+
+# --- App Store ---
+set_default com.apple.SoftwareUpdate AutomaticCheckEnabled bool true
+set_default com.apple.SoftwareUpdate ScheduleFrequency int 1
+set_default com.apple.SoftwareUpdate AutomaticDownload int 1
+set_default com.apple.SoftwareUpdate CriticalUpdateInstall int 1
+set_default com.apple.commerce AutoUpdate bool true
+
+# --- TextEdit ---
+# Plain text mode
+set_default com.apple.TextEdit RichText int 0
+# UTF-8
+set_default com.apple.TextEdit PlainTextEncoding int 4
+set_default com.apple.TextEdit PlainTextEncodingForWrite int 4
+
+# --- Photos ---
+# Don't open automatically when devices are plugged in
+defaults -currentHost write com.apple.ImageCapture disableHotPlug -bool true
+
+# --- Time Machine ---
+# Don't offer new disks as backup volume
+set_default com.apple.TimeMachine DoNotOfferNewDisksForBackup bool true
+
+# --- Terminal ---
+# UTF-8 only
+defaults write com.apple.terminal StringEncodings -array 4
+
+# --- Activity Monitor ---
+set_default com.apple.ActivityMonitor OpenMainWindow bool true
+set_default com.apple.ActivityMonitor IconType int 5
+set_default com.apple.ActivityMonitor ShowCategory int 0
+set_default com.apple.ActivityMonitor SortColumn string "CPUUsage"
+set_default com.apple.ActivityMonitor SortDirection int 0
+
+restart_app "Activity Monitor"
+
+echo "==> App defaults applied."

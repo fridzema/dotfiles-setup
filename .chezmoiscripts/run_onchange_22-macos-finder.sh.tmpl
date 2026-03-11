@@ -1,0 +1,59 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+# shellcheck source=helpers/macos-defaults.sh
+source "{{ .chezmoi.sourceDir }}/helpers/macos-defaults.sh"
+
+echo "==> Applying Finder defaults..."
+
+close_system_settings
+
+# Show hidden files
+set_default com.apple.finder AppleShowAllFiles bool true
+
+# Show all extensions
+set_global_default AppleShowAllExtensions bool true
+
+# Show status bar and path bar
+set_default com.apple.finder ShowStatusBar bool true
+set_default com.apple.finder ShowPathbar bool true
+
+# Search current folder by default
+set_default com.apple.finder FXDefaultSearchScope string "SCcf"
+
+# List view by default
+set_default com.apple.finder FXPreferredViewStyle string "Nlsv"
+
+# Default location: Desktop
+set_default com.apple.finder NewWindowTarget string "PfDe"
+defaults write com.apple.finder NewWindowTargetPath -string "file://${HOME}/Desktop/"
+
+# Folders on top when sorting
+set_default com.apple.finder _FXSortFoldersFirst bool true
+
+# Spring loading
+set_global_default com.apple.springing.enabled bool true
+
+# No warning on extension change
+set_default com.apple.finder FXEnableExtensionChangeWarning bool false
+
+# Prefer tabs always
+set_global_default AppleWindowTabbingMode string "always"
+
+# No .DS_Store on network/USB
+set_default com.apple.desktopservices DSDontWriteNetworkStores bool true
+set_default com.apple.desktopservices DSDontWriteUSBStores bool true
+
+# Expand File Info panes
+defaults write com.apple.finder FXInfoPanesExpanded -dict \
+  General -bool true \
+  OpenWith -bool true \
+  Privileges -bool true
+
+# Show ~/Library
+chflags nohidden ~/Library 2>/dev/null || true
+xattr -d com.apple.FinderInfo ~/Library 2>/dev/null || true
+
+restart_app "Finder"
+
+echo "==> Finder defaults applied."
