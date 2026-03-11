@@ -10,26 +10,29 @@ echo "==> Applying Safari defaults..."
 
 close_system_settings
 
+# Use full plist path to bypass macOS sandbox restrictions (Ventura+)
+SAFARI_PLIST="$HOME/Library/Containers/com.apple.Safari/Data/Library/Preferences/com.apple.Safari.plist"
+
 # Don't send search queries to Apple
-set_default com.apple.Safari UniversalSearchEnabled bool false
-set_default com.apple.Safari SuppressSearchSuggestions bool true
+set_default "$SAFARI_PLIST" UniversalSearchEnabled bool false
+set_default "$SAFARI_PLIST" SuppressSearchSuggestions bool true
 
 # Show full URL
-set_default com.apple.Safari ShowFullURLInSmartSearchField bool true
+set_default "$SAFARI_PLIST" ShowFullURLInSmartSearchField bool true
 
 # Home page: about:blank
-set_default com.apple.Safari HomePage string "about:blank"
+set_default "$SAFARI_PLIST" HomePage string "about:blank"
 
 # Enable Develop menu and Web Inspector
-set_default com.apple.Safari IncludeDevelopMenu bool true
-set_default com.apple.Safari WebKitDeveloperExtrasEnabledPreferenceKey bool true
-set_default com.apple.Safari com.apple.Safari.ContentPageGroupIdentifier.WebKit2DeveloperExtrasEnabled bool true
+set_default "$SAFARI_PLIST" IncludeDevelopMenu bool true
+set_default "$SAFARI_PLIST" WebKitDeveloperExtrasEnabledPreferenceKey bool true
+set_default "$SAFARI_PLIST" com.apple.Safari.ContentPageGroupIdentifier.WebKit2DeveloperExtrasEnabled bool true
 
 # Warn about fraudulent websites
-set_default com.apple.Safari WarnAboutFraudulentWebsites bool true
+set_default "$SAFARI_PLIST" WarnAboutFraudulentWebsites bool true
 
 # Auto-update extensions
-set_default com.apple.Safari InstallExtensionUpdatesAutomatically bool true
+set_default "$SAFARI_PLIST" InstallExtensionUpdatesAutomatically bool true
 
 restart_app "Safari"
 
