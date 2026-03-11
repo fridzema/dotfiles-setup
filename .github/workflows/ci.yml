@@ -14,7 +14,9 @@ jobs:
       - name: Install shellcheck
         run: brew install shellcheck
       - name: Lint pure shell scripts
-        run: shellcheck bin/setup.sh helpers/macos-defaults.sh .chezmoiscripts/run_once_02-configure-nvm.sh dot_zshrc
+        run: |
+          shellcheck bin/setup.sh helpers/macos-defaults.sh .chezmoiscripts/run_once_02-configure-nvm.sh
+          shellcheck --exclude=SC1091 dot_zshrc
       - name: Lint templated shell scripts
         run: |
           for f in $(find .chezmoiscripts -name '*.sh.tmpl'); do
@@ -29,7 +31,7 @@ jobs:
       - name: Install chezmoi
         run: brew install chezmoi
       - name: Verify chezmoi source state
-        run: chezmoi init --source="$(pwd)" --config-path=.github/test-chezmoi-data.toml --no-tty --dry-run --verbose
+        run: chezmoi apply --source="$(pwd)" --config=.github/test-chezmoi-data.toml --no-tty --dry-run --verbose
 
   brewfile-lint:
     runs-on: macos-14
