@@ -7,13 +7,43 @@ on:
   workflow_dispatch:
 
 jobs:
-  check:
+  shellcheck:
     runs-on: macos-14
     steps:
       - uses: actions/checkout@v4
       - name: Install shellcheck
         run: brew install shellcheck
-      - name: Run shellcheck
-        run: shellcheck setup.sh scripts/*.sh
-      - name: Validate Brewfile
-        run: brew bundle check --file=Brewfile --verbose
+      - name: Lint pure shell scripts
+        run: shellcheck bin/setup.sh helpers/macos-defaults.sh .chezmoiscripts/run_once_02-configure-nvm.sh
+      - name: Lint templated shell scripts
+        run: |
+          for f in $(find .chezmoiscripts -name '*.sh.tmpl') dot_zshrc.tmpl; do
+            echo "Checking $f..."
+            sed 's/{{[^}]*}}/TMPL/g' "$f" | shellcheck --exclude=SC1091 - || exit 1
+          done
+
+  chezmoi-verify:
+    runs-on: macos-14
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install chezmoi
+        run: brew install chezmoi
+      - name: Verify chezmoi source state
+        run: |
+          printf "%s\n" \
+            "$(grep 'name' .github/test-chezmoi-data.toml | cut -d'"' -f2)" \
+            "$(grep 'email' .github/test-chezmoi-data.toml | cut -d'"' -f2)" \
+            "$(grep 'hostname' .github/test-chezmoi-data.toml | cut -d'"' -f2)" \
+            "$(grep 'locale' .github/test-chezmoi-data.toml | cut -d'"' -f2)" \
+          | chezmoi init --source="$(pwd)" --no-tty --dry-run --verbose
+
+  brewfile-lint:
+    runs-on: macos-14
+    steps:
+      - uses: actions/checkout@v4
+      - name: Validate Brewfiles
+        run: |
+          for f in brewfiles/Brewfile.*; do
+            echo "Checking $f..."
+            brew bundle check --file="$f" --verbose
+          done
