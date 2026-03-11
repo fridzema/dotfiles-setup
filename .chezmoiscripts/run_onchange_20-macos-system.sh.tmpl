@@ -9,7 +9,6 @@ source "{{ .chezmoi.sourceDir }}/helpers/macos-defaults.sh"
 echo "==> Applying macOS system defaults..."
 
 close_system_settings
-require_sudo
 
 # Set computer name
 sudo scutil --set ComputerName "{{ .hostname }}"

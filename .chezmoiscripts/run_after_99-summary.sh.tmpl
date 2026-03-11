@@ -70,5 +70,8 @@ if [ -f "$SSH_KEY" ]; then
 fi
 echo "    - Run 'mackup restore' to restore app settings from iCloud"
 echo "    - Sign in to apps (Spotify, Slack, Arc, Chrome, etc.)"
+if ! ls "$HOME/Library/Containers/com.apple.Safari/Data/Library/Preferences/" &>/dev/null; then
+  echo "    - Grant Full Disk Access to your terminal, then re-run to apply Safari defaults"
+fi
 echo "    - Restart Mac to apply all system settings"
 echo ""

@@ -1,0 +1,23 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+# chezmoi.sourceDir hash: {{ include "helpers/macos-defaults.sh" | sha256sum }}
+
+echo "==> Running preflight checks..."
+
+# --- Cache sudo upfront ---
+echo "==> Setup requires administrator privileges (one-time prompt)..."
+sudo -v
+# Keep sudo alive in background for the duration of setup
+while true; do sudo -n true; sleep 50; kill -0 "$$" || exit; done 2>/dev/null &
+
+# --- Check Full Disk Access ---
+if ! ls "$HOME/Library/Containers/com.apple.Safari/Data/Library/Preferences/" &>/dev/null; then
+  echo ""
+  echo "==> WARNING: Your terminal does not have Full Disk Access."
+  echo "   Safari preferences (step 24) will be skipped."
+  echo "   To fix: System Settings > Privacy & Security > Full Disk Access > enable your terminal"
+  echo ""
+fi
+
+echo "==> Preflight checks complete."
