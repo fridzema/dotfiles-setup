@@ -9,6 +9,7 @@ if [ -f "$SSH_KEY" ]; then
 fi
 
 echo "==> Generating SSH key..."
+# Prompts for passphrase interactively (intentional — do not add -N "")
 ssh-keygen -t ed25519 -C "{{ .data.email }}" -f "$SSH_KEY"
 
 echo "==> Adding SSH key to macOS Keychain..."
